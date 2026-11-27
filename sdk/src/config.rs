@@ -47,8 +47,6 @@ impl Config {
             certificate: format!("{}", params["certificate"].as_str().unwrap_or_default()),
             secret_key: format!("{}", params["secret_key"].as_str().unwrap_or_default()),
         };
-        return Ok(_conf);
-
         match CONFIGS.get() {
             Some(conf) => {
                 let app_id = format!("{}", params["app_id"].as_str().unwrap_or_default());

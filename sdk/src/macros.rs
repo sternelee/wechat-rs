@@ -42,11 +42,11 @@ macro_rules! watch_time {
 macro_rules! error {
     // error! {code: i32, msg: String};
     (code: $code: expr, msg: $msg: expr) => {{
-        crate::WechatError::custom($code, $msg)
+        $crate::WechatError::custom($code, $msg)
     }};
     // error! {code: i32, msg: String,};
     (code: $code: expr, msg: $msg: expr,) => {{
-        crate::WechatError::custom($code, $msg)
+        $crate::WechatError::custom($code, $msg)
     }};
 
     // error!("msg {}", msg)
@@ -54,7 +54,7 @@ macro_rules! error {
         let content = format!($($arg)*);
         // println!("content: {}", content);
         // 调试模式下直接使用println!()
-        crate::WechatError::msg(content)
+        $crate::WechatError::msg(content)
     }};
 }
 
@@ -67,7 +67,7 @@ macro_rules! log {
         if cfg!(debug_assertions) {
             println!("{}", content);
         } else {
-            crate::WechatError::write_to_file(content);
+            $crate::WechatError::write_to_file(content);
         }
     }}
 }

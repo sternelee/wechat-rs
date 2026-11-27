@@ -77,7 +77,7 @@ impl Order {
                 
                 let mut new_params = serde_json::Map::new();
                
-                let timestamp = Utc::now().naive_local().timestamp();
+                let timestamp = Utc::now().naive_local().and_utc().timestamp();
                 new_params.insert(format!("appid"), rr.get("appid").unwrap().clone());
                 new_params.insert(format!("partnerid"), rr.get("mch_id").unwrap().clone());
                 new_params.insert(format!("prepayid"), rr.get("prepay_id").unwrap().clone());
@@ -91,7 +91,7 @@ impl Order {
                 let prepay_id = rr.get("prepay_id").unwrap().as_str().unwrap();
                 let mut new_params = serde_json::Map::new();
                
-                let timestamp = Utc::now().naive_local().timestamp();
+                let timestamp = Utc::now().naive_local().and_utc().timestamp();
                 new_params.insert(format!("appId"), rr.get("appid").unwrap().clone());
                 new_params.insert(format!("timeStamp"), json!(format!("{}",timestamp)));
                 new_params.insert(format!("nonceStr"), rr.get("nonce_str").unwrap().clone());

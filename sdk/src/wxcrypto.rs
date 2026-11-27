@@ -93,10 +93,8 @@ impl WeChatCrypto {
 
     /// 解密
     pub fn decrypt(&self, ciphertext: &str) -> Result<String> {
-        println!("=== msg decrypt === {:?}", ciphertext);
         let aes = AesCrypt::new(self.key.clone(), self.key[..16].to_vec());
         let content = aes.decrypt(ciphertext.to_owned());
-        println!("=== msg1 decrypt === {:?}", content);
         // aes descrypt
         let text = content.as_bytes();
         let mut rdr = Cursor::new(text[16..20].to_vec());
@@ -124,14 +122,12 @@ impl WeChatCrypto {
         wtr.extend(msg.bytes());
         wtr.extend(self._id.bytes());
 
-        println!("=== msg encrypt === {:?}", self.key);
         //aes 加密
         let aes = AesCrypt::new(self.key.clone(), self.key[..16].to_vec());
         let encrypted = aes.encrypt_byte(wtr); //aes256_cbc_encrypt(&wtr, &self.key, &self.key[..16]).unwrap();
                                                //base64 编码
         let b64encoded = base64::encode(&encrypted);
 
-        println!("==== msg encrypt base64 {}", b64encoded);
         //获得签名
         let signature = self.get_signature(timestamp, nonce, &b64encoded);
         let msg = format!(
@@ -245,6 +241,38 @@ pub fn aes256_cbc_decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Resul
     }
     Ok(final_result)
 }
+// Encrypt a buffer with the given key and iv using AES-128/CBC/Pkcs encryption.
+pub fn aes128_cbc_encrypt(data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>> {
+    let mut encryptor =
+        aes::cbc_encryptor(aes::KeySize::KeySize128, key, iv, blockmodes::PkcsPadding);
+
+    let mut final_result = Vec::<u8>::new();
+    let mut read_buffer = buffer::RefReadBuffer::new(data);
+    let mut buffer = [0; 4096];
+    let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
+    loop {
+        let result = match encryptor.encrypt(&mut read_buffer, &mut write_buffer, true) {
+            Ok(result) => result,
+            Err(err) => return Err(error! {"encryptor failed: {:?}", err}),
+        };
+
+        final_result.extend(
+            write_buffer
+                .take_read_buffer()
+                .take_remaining()
+                .iter()
+                .map(|&i| i),
+        );
+
+        match result {
+            BufferResult::BufferUnderflow => break,
+            BufferResult::BufferOverflow => {}
+        }
+    }
+
+    Ok(final_result)
+}
+
 // Encrypt a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
 pub fn aes256_cbc_encrypt(data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>> {
     let mut encryptor =
@@ -303,7 +331,7 @@ mod tests {
         dic.insert("nonce".to_owned(), "1661748508".to_owned());
         dic.insert("timestamp".to_owned(), "1587121403".to_owned());
         let decrypted = crypto.decrypt_message(xml, &dic).unwrap();
-        println!("decrypted={:?}", decrypted);
+        assert!(decrypted.contains("ToUserName"));
     }
 
     #[test]
@@ -323,6 +351,6 @@ mod tests {
         let timestamp = crate::current_timestamp();
         let nonce = format!("{}", timestamp);
         let encrypt_text = crypto.encrypt_message(msg, timestamp, &nonce);
-        println!("{:?}", encrypt_text);
+        assert!(encrypt_text.is_ok());
     }
 }

@@ -437,11 +437,18 @@ pub fn get_redis_client() -> HashMap<String, redis::Client> {
     cache.clone()
 }
 
-/// 宏测试
+/// 手工集成测试（默认跳过）
+///
+/// 需要真实 redis 时运行：
+/// `WECHAT_REDIS_TEST_URL=redis://127.0.0.1/9 cargo test -p wechat_redis -- --ignored`
 #[test]
+#[ignore = "需要真实 redis 实例，默认跳过"]
 fn test_err() {
     use super::{RedisStorage, SessionStore};
-    let url = format!("redis://:abc123!%40%23%24@139.9.173.11:6379/9");
+    let url = match std::env::var("WECHAT_REDIS_TEST_URL") {
+        Ok(url) if !url.is_empty() => url,
+        _ => return,
+    };
     println!("{:?}", url);
     match RedisStorage::from_url(url) {
         Ok(session) => {

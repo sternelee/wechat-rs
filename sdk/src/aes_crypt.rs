@@ -15,7 +15,6 @@ impl AesCrypt {
     pub fn new(_key: Vec<u8>, iv: Vec<u8>) -> AesCrypt {
         let l = _key.len();
         let mut key = _key.clone();
-        println!("l={}", l);
         let mut key_size = aes::KeySize::KeySize128;
         if l <= 16 {
             key = vec_pad(_key, 16);
@@ -79,7 +78,6 @@ impl AesCrypt {
             match aes_cbc_decrypt(self.key_size, &base64_decode[..], &self.key, &self.iv) {
                 Ok(data) => data,
                 Err(_e) => {
-                    println!("base64_decode={:?}", _e);
                     return "".to_owned();
                 }
             };

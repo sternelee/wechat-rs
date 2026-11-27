@@ -9,4 +9,13 @@ pub const DEFAULT_USER_AGENT: &'static str = "Mozilla/5.0 (X11; Linux x86_64) Ap
 /// 微信接口域名 
 pub const API_DOMAIN: &'static str = "https://api.weixin.qq.com";
 
+/// 企业微信接口域名
+pub const WORK_API_DOMAIN: &'static str = "https://qyapi.weixin.qq.com";
+
+/// 消息格式：xml
+pub const MSG_TYPE_XML: &'static str = "xml";
+
+/// 消息格式：json
+pub const MSG_TYPE_JSON: &'static str = "json";
+
 

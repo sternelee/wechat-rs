@@ -141,7 +141,7 @@ impl WechatError {
                     .unwrap();
             }
             Err(err) => {
-                println!("{:?}", err);
+                eprintln!("{:?}", err);
             }
         }
     }

@@ -43,9 +43,8 @@ impl Code {
         });
 
         let api = Client::new();
-        let res = api.get(&uri).await?;
 
-        wechat_sdk::json_decode(&res)
+        api.post_json(&uri, &data).await
     }
 
     /// 获取体验版二维码
@@ -61,7 +60,6 @@ impl Code {
                 path
             )
         );
-        println!("path={}", uri);
         let api = Client::new();
         api.get_bytes(&uri).await
     }
@@ -78,8 +76,8 @@ impl Code {
         );
         let data = json!({ "item_list": [item] });
         let api = Client::new();
-        let res = api.get(&uri).await?;
-        wechat_sdk::json_decode(&res)
+
+        api.post_json(&uri, &data).await
     }
 
     /// 查询指定版本的审核状态
@@ -94,8 +92,8 @@ impl Code {
         );
         let data = json!({ "auditid": auditid });
         let api = Client::new();
-        let res = api.get(&uri).await?;
-        wechat_sdk::json_decode(&res)
+
+        api.post_json(&uri, &data).await
     }
 
     /// 查询指定版本的审核状态
@@ -138,8 +136,8 @@ impl Code {
         );
         let data = json!({});
         let api = Client::new();
-        let res = api.get(&uri).await?;
-        wechat_sdk::json_decode(&res)
+
+        api.post_json(&uri, &data).await
     }
     /// 版本回退
     pub async fn revert_code(&self) -> WechatResult<serde_json::Value> {
@@ -168,8 +166,8 @@ impl Code {
         );
         let data = json!({ "auditid": auditid });
         let api = Client::new();
-        let res = api.get(&uri).await?;
-        wechat_sdk::json_decode(&res)
+
+        api.post_json(&uri, &data).await
     }
 
     /// 获取小程序码

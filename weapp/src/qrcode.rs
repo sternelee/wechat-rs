@@ -18,6 +18,8 @@ pub struct QRCode {
     pub app_id: String,
     /// 密钥
     pub secret: String,
+    /// 是否使用稳定版 access_token（与应用配置保持一致）
+    pub stable: bool,
 }
 
 impl QRCode {
@@ -26,12 +28,20 @@ impl QRCode {
         QRCode {
             app_id: app_id.to_owned(),
             secret: secret.to_owned(),
+            stable: false,
         }
+    }
+
+    /// 使用稳定版 access_token
+    pub fn with_stable(mut self, stable: bool) -> Self {
+        self.stable = stable;
+        self
     }
 
     /// 获取接口access token
     async fn get_access_token(&self) -> String {
-        match AccessToken::new("weapp", &self.app_id, &self.secret)
+        match AccessToken::new("mini_app", &self.app_id, &self.secret)
+            .stable(self.stable)
             .get()
             .await
         {
@@ -70,10 +80,9 @@ impl QRCode {
         }
     }
 
-    // 转为bas64
-    pub fn base64_image_bytes(_bs: Vec<u8>) -> String {
-        // tube_img::vec_to_base64(bs)
-        "".to_string()
+    // 转为 base64，对齐 PHP `base64_encode($contents)`
+    pub fn base64_image_bytes(bs: Vec<u8>) -> String {
+        base64::encode(bs)
     }
 
     /// 获取小程序码，适用于需要的码数量极多的业务场景
@@ -83,9 +92,12 @@ impl QRCode {
     /// is_hyaline	boolean	false	否	是否需要透明底色，为 true 时，生成透明底色的小程序
     pub async fn get_unlimited_qrcode(
         &self,
-        sence: &str,
-        path: &str,
+        scene: &str,
+        page: &str,
         width: usize,
+        auto_color: bool,
+        line_color: (u8, u8, u8),
+        is_hyaline: bool,
     ) -> WechatResult<Vec<u8>> {
         let access_token = self.get_access_token().await;
         if access_token == "" {
@@ -98,9 +110,12 @@ impl QRCode {
         );
         // 接口参数
         let val = json!({
-            "sence": sence,
-            "path": path,
-            "width": width
+            "scene": scene,
+            "page": page,
+            "width": width,
+            "auto_color": auto_color,
+            "line_color": {"r": line_color.0, "g": line_color.1, "b": line_color.2},
+            "is_hyaline": is_hyaline
         });
         // log!("=== url === {}", url);
         match Client::new().post_bytes(&url, &val).await {
@@ -114,7 +129,7 @@ impl QRCode {
     /// auto_color	boolean	false	否	自动配置线条颜色，如果颜色依然是黑色，则说明不建议配置主色调，默认 false
     /// line_color	Object	{"r":0,"g":0,"b":0}	否	auto_color 为 false 时生效，使用 rgb 设置颜色 例如 {"r":"xxx","g":"xxx","b":"xxx"} 十进制表示
     /// is_hyaline	boolean	false	否	是否需要透明底色，为 true 时，生成透明底色的小程序
-    pub async fn get(&self, path: &str, width: usize) -> WechatResult<Vec<u8>> {
+    pub async fn get(&self, path: &str, width: usize, auto_color: bool, line_color: (u8,u8,u8), is_hyaline: bool) -> WechatResult<Vec<u8>> {
         // 获取access token
         let access_token = self.get_access_token().await;
         if access_token == "" {
@@ -129,13 +144,26 @@ impl QRCode {
         // 接口参数
         let val = json!({
             "path": path,
-            "width": width
+            "width": width,
+            "auto_color": auto_color,
+            "line_color": {"r": line_color.0, "g": line_color.1, "b": line_color.2},
+            "is_hyaline": is_hyaline
         });
         // log!("=== url === {}", url);
         match Client::new().post_bytes(&url, &val).await {
             Ok(res) => Ok(res),
             Err(err) => Err(err),
         }
+    }
+
+    /// 获取小程序 scheme 码
+    pub async fn generate_scheme(&self, jump_wxa: serde_json::Value, is_expire: bool, expire_time: i64) -> WechatResult<serde_json::Value> {
+        let access_token = self.get_access_token().await;
+        if access_token == "" { return Err(error!("Access token not found")); }
+        let url = format!("{}/wxa/generatescheme?access_token={}", API_DOMAIN, access_token);
+        let val = json!({"jump_wxa": jump_wxa, "is_expire": is_expire, "expire_time": expire_time});
+        let res = Client::new().post(&url, &val).await?;
+        wechat_sdk::json_decode(&res)
     }
 }
 

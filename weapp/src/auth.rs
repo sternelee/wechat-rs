@@ -48,8 +48,23 @@ impl Auth {
     /// 用户支付完成后，获取该用户的 UnionId，无需用户授权。本接口支持第三方平台代理查询。
     /// GET https://api.weixin.qq.com/wxa/getpaidunionid?access_token=ACCESS_TOKEN&openid=OPENID
     /// DOC https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/user-info/auth.getPaidUnionId.html
-    pub fn get_paid_union_id() -> WechatResult<String> {
-        Ok("".to_string())
+    pub async fn get_paid_union_id(
+        access_token: &str,
+        openid: &str,
+        transaction_id: Option<&str>,
+        mch_id: Option<&str>,
+        out_trade_no: Option<&str>,
+    ) -> WechatResult<serde_json::Value> {
+        let mut url = format!(
+            "{}/wxa/getpaidunionid?access_token={}&openid={}",
+            crate::API_DOMAIN, access_token, openid
+        );
+        if let Some(t) = transaction_id { url.push_str(&format!("&transaction_id={}", t)); }
+        if let Some(m) = mch_id { url.push_str(&format!("&mch_id={}", m)); }
+        if let Some(o) = out_trade_no { url.push_str(&format!("&out_trade_no={}", o)); }
+        let api = Client::new();
+        let res = api.get(&url).await?;
+        wechat_sdk::json_decode(&res)
     }
 
     /// 解析小程的手机号数据

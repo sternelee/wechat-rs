@@ -35,6 +35,7 @@ pub mod pay {
 /// 微信小店
 pub mod store {
     #[cfg(feature = "store")]
+    #[allow(unused_imports)]
     pub use wechat_store::*;
 }
 
@@ -48,49 +49,36 @@ pub use wechat_sdk::*;
 
 #[cfg(test)]
 mod tests {
-    // use super::*;
-    use serde_json::*;
-    #[cfg(feature = "pay")]
-    use wechat_pay::Order;
-    //
+    use serde_json::json;
+
     #[test]
-    #[cfg(feature = "pay")]
-    fn it_pay_ok_works() {
-        println!("{:?}", "=======================");
-        //初始化 配置
+    fn loads_config() {
         let conf = wechat_sdk::Config::load(json!({
-            "app_id": "",
-            "mch_id": "",
-            "secret_key": "",
+            "app_id": "wx123",
+            "secret": "secret",
+            "mch_id": "1900000109",
+            "secret_key": "v2-key",
         }))
         .unwrap();
 
-        actix_rt::System::new().block_on(async {
-            let _params = json!({
-                "attach": "支付测试",
-                "body": "testx",
-                "nonce_str": "1212312312",
-                "out_trade_no": "11112z",
-                "notify_url": "https://wxpay.wxutil.com/pub_v2/pay/notify.v2.php",
-                "total_fee": 1,
-                "openid": "oUpe_5T08-CTL7sXr_XwchZmlQu4",
-                "trade_type": "JSAPI"
-            });
+        assert_eq!(conf.app_id, "wx123");
+        assert_eq!(conf.mch_id, "1900000109");
+    }
 
-            let params = json!({
-                "nonce_str": "1212312312",
-                "out_trade_no": "A_4425320788525061",
-                "out_refund_no": "saa1234567891",
-                "total_fee": 1,
-                "refund_fee": 1,
-                //"notify_url": "https://wxpay.wxutil.com/pub_v2/pay/notify.v2.php",
-            });
-            let r = Order::new(conf);
-            let v = r.refund(params).await;
-            println!("{:?}", v);
-            //let r = Order::create(params).await.unwrap();
-            //println!("{:?}",r);
-        });
-        //println!("{:?}",_v);
+    #[test]
+    fn exports_modules() {
+        // 各模块的类型可通过根 crate 访问
+        let _ = core::any::type_name::<crate::mp::MpConfig>();
+        let _ = core::any::type_name::<crate::Client>();
+
+        #[cfg(feature = "pay")]
+        {
+            let _ = core::any::type_name::<crate::pay::Merchant>();
+        }
+
+        #[cfg(feature = "work")]
+        {
+            let _ = core::any::type_name::<crate::work::WorkConfig>();
+        }
     }
 }

@@ -28,7 +28,7 @@ serde_json = "1.0.79"
 
 [features]
 default = []
-full = ["wechat_pay", "wechat_store", "wechat_work"]
+full = ["open", "pay", "store", "weapp", "work"]
 open = ["wechat_open"]
 pay = ["wechat_pay"]
 store = ["wechat_store"]

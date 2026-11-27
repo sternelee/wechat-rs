@@ -8,13 +8,16 @@ version = "0.2.0"
 
 [dependencies]
 lazy_static = "1.4.0"
+md5 = "0.7.0"
 percent-encoding = "2.1.0"
 serde = {version = "1.0.136", features = ["derive"]}
 serde_json = "1.0.79"
 yaml-rust = "0.4.5"
 base64 = "0.13.0"
 
+wechat_mp = {path = "../mp", version = "0.2.0"}
 wechat_redis = {path = "../redis", version = "0.2.0"}
+wechat_weapp = {path = "../weapp", version = "0.2.0"}
 wechat_sdk = {path = "../sdk", version = "0.2.0"}
 
 

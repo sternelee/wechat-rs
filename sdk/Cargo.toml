@@ -38,5 +38,7 @@ percent-encoding = "2.1.0"
 
 [features]
 default = ["axum"]
+# 兼容旧版：req_async 等价于 axum（异步 reqwest 客户端）
+req_async = ["bytes", "tokio", "reqwest"]
 # 依赖 tokio, indicatif
 axum = ["bytes", "tokio", "reqwest"]

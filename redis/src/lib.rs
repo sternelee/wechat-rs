@@ -4,7 +4,6 @@
 
 #[macro_use]
 extern crate wechat_sdk;
-use wechat_sdk::WechatError;
 
 // 导入宏
 #[macro_use]
@@ -12,6 +11,9 @@ extern crate lazy_static;
 // pub use xmlutil::
 mod session;
 pub use session::{RedisStorage, SessionStore};
+
+pub mod cache;
+pub use cache::{install_redis_cache, RedisCacheStore};
 
 mod config;
 pub use config::{get_redis_conf, set_redis_conf, RedisConfig};

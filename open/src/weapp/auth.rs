@@ -64,10 +64,8 @@ impl WxApp {
         let encrypte_data = base64::decode(encrypte_data).unwrap();
         let iv = base64::decode(iv).unwrap();
         let session_key = base64::decode(session_key).unwrap();
-        println!("session_key={:?}", session_key);
         // aes descrypt
         let res = aes128_cbc_decrypt(&encrypte_data, &session_key, &iv);
-        println!("res={:?}", res);
         let text = match res {
             Ok(v) => {
                 // let mut rdr = Cursor::new(v[16..20].to_vec());
@@ -84,7 +82,6 @@ impl WxApp {
             }
             Err(_) => "".to_owned(),
         };
-        println!("{:?}", text);
 
         Ok(text)
     }

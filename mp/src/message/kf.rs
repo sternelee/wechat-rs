@@ -49,7 +49,7 @@ impl KFService {
             Ok(v) => {
                 log!("success {:?}", v);
             }
-            Err(e) => println!("error {:?}", e),
+            Err(e) => log!("send kf message error {:?}", e),
         }
     }
 }

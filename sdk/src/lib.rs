@@ -17,11 +17,33 @@ pub use errors::{ErrorKind, WechatError};
 
 // 加解密处理
 mod wxcrypto;
-pub use wxcrypto::{aes128_cbc_decrypt, aes256_cbc_decrypt, aes256_cbc_encrypt, WeChatCrypto};
+pub use wxcrypto::{
+    aes128_cbc_decrypt, aes128_cbc_encrypt, aes256_cbc_decrypt, aes256_cbc_encrypt, WeChatCrypto,
+};
 
 // 公共AccessToken管理
 mod token;
-pub use token::AccessToken;
+pub use authorizer::ComponentOAuth;
+pub use token::{AccessToken, Token};
+
+// JsApiTicket 管理
+mod ticket;
+pub use ticket::JsApiTicket;
+
+// 字符串与签名工具
+pub mod signature;
+pub mod strutil;
+
+// 消息加解密
+pub mod encryptor;
+pub use encryptor::{EncryptedMessage, Encryptor};
+
+// XML <-> JSON
+pub mod xml;
+
+// 微信消息服务器
+pub mod server;
+pub use server::{Server, ServerResponse};
 
 // 导出常量配置
 pub mod constant;
@@ -31,6 +53,8 @@ mod reqw_client;
 #[cfg(any(feature = "req_async", feature = "axum"))]
 pub use reqw_client::Client;
 
+pub mod authorizer;
+pub mod cache;
 pub mod config;
 pub use config::*;
 
@@ -38,7 +62,8 @@ pub mod aes_crypt;
 pub mod xmlutil;
 pub use aes_crypt::AesCrypt;
 
-mod url_encoding;
+pub mod form;
+pub mod url_encoding;
 pub use url_encoding::get_url_encode;
 /// 写入文件到日志
 // #[allow(dead_code)]
@@ -76,7 +101,6 @@ pub fn current_timestamp() -> u64 {
 ///
 #[inline]
 pub fn json_decode(data: &str) -> WechatResult<serde_json::Value> {
-    log!("==== {} ========", data);
     let obj: serde_json::Value = match serde_json::from_str(data) {
         Ok(decoded) => decoded,
         Err(ref e) => {
@@ -86,7 +110,11 @@ pub fn json_decode(data: &str) -> WechatResult<serde_json::Value> {
             });
         }
     };
-    let dic = obj.as_object().unwrap();
+    // 微信接口也会返回数组/标量（如批量接口），非对象时直接原样返回，避免 panic
+    let dic = match obj.as_object() {
+        Some(dic) => dic,
+        None => return Ok(obj),
+    };
     let code = if dic.contains_key("errcode") {
         "errcode"
     } else {
@@ -108,7 +136,6 @@ pub fn json_decode(data: &str) -> WechatResult<serde_json::Value> {
             msg: msg,
         });
     }
-    println!("obj====={:?}", obj);
     Ok(obj)
 }
 
@@ -117,5 +144,24 @@ mod tests {
     #[test]
     fn it_works() {
         assert_eq!(2 + 2, 4);
+    }
+
+    #[test]
+    fn json_decode_handles_non_object_payloads() {
+        // 微信批量接口会返回数组，不应 panic
+        let value = super::json_decode(r#"[{"openid":"o1"}]"#).unwrap();
+        assert!(value.is_array());
+
+        let value = super::json_decode(r#""plain""#).unwrap();
+        assert_eq!(value.as_str(), Some("plain"));
+    }
+
+    #[test]
+    fn json_decode_raises_on_error_code() {
+        let err = super::json_decode(r#"{"errcode":40001,"errmsg":"invalid credential"}"#).unwrap_err();
+        match err.kind {
+            super::ErrorKind::Custom { code, .. } => assert_eq!(code, 40001),
+            other => panic!("unexpected kind: {:?}", other),
+        }
     }
 }
